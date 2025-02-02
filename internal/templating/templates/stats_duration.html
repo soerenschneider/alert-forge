@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alert Statistics</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .chart {
+            width: 80%;
+            height: 400px;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+<h1>Alert Statistics</h1>
+
+<h2>Alert Durations</h2>
+<div id="alertDurationChart" class="chart"></div>
+
+<h2>Alerts by Day</h2>
+<div id="alertsByDayChart" class="chart"></div>
+
+<h2>Average Alert Duration by Severity</h2>
+<div id="averageDurationSeverityChart" class="chart"></div>
+
+<h2>Alerts by Severity</h2>
+<div id="alertsBySeverityChart" class="chart"></div>
+
+<h2>Alerts by Instance</h2>
+<div id="alertsByInstanceChart" class="chart"></div>
+
+<script>
+    // Data passed from Go using AlertStats struct
+    const alertStats = {{ . }};
+
+    // Utility to format data for charts
+    function formatChartData(data, keyX, keyY) {
+        return {
+            labels: data.map(item => item[keyX]),
+            values: data.map(item => item[keyY])
+        };
+    }
+
+    // Alert Durations Chart
+    const alertDurationData = formatChartData(alertStats.alert_duration, 'name', 'average_duration');
+    const alertDurationChart = echarts.init(document.getElementById('alertDurationChart'));
+    alertDurationChart.setOption({
+        title: { text: 'Alert Durations', left: 'center' },
+        tooltip: { trigger: 'axis' },
+        xAxis: { type: 'category', data: alertDurationData.labels },
+        yAxis: { type: 'value', name: 'Duration (ms)' },
+        series: [{ type: 'bar', data: alertDurationData.values, itemStyle: { color: '#5470C6' } }]
+    });
+
+    // Alerts Per Day Chart
+    const alertsByDayData = formatChartData(alertStats.alerts_by_day, 'alert_date', 'alert_count');
+    const alertsByDayChart = echarts.init(document.getElementById('alertsByDayChart'));
+    alertsByDayChart.setOption({
+        title: { text: 'Alerts by Day', left: 'center' },
+        tooltip: { trigger: 'axis' },
+        xAxis: { type: 'category', data: alertsByDayData.labels },
+        yAxis: { type: 'value', name: 'Count' },
+        series: [{ type: 'line', data: alertsByDayData.values, itemStyle: { color: '#91CC75' } }]
+    });
+
+    // Average Alert Duration by Severity Chart
+    const avgDurationSeverityData = formatChartData(alertStats.avg_alert_duration_by_severity, 'severity', 'average_duration');
+    const averageDurationSeverityChart = echarts.init(document.getElementById('averageDurationSeverityChart'));
+    averageDurationSeverityChart.setOption({
+        title: { text: 'Average Duration by Severity', left: 'center' },
+        tooltip: { trigger: 'axis' },
+        xAxis: { type: 'category', data: avgDurationSeverityData.labels },
+        yAxis: { type: 'value', name: 'Duration (ms)' },
+        series: [{ type: 'bar', data: avgDurationSeverityData.values, itemStyle: { color: '#EE6666' } }]
+    });
+
+    // Alerts by Severity Chart
+    const alertsBySeverityData = formatChartData(alertStats.alerts_by_severity, 'severity', 'alert_count');
+    const alertsBySeverityChart = echarts.init(document.getElementById('alertsBySeverityChart'));
+    alertsBySeverityChart.setOption({
+        title: { text: 'Alerts by Severity', left: 'center' },
+        tooltip: { trigger: 'axis' },
+        xAxis: { type: 'category', data: alertsBySeverityData.labels },
+        yAxis: { type: 'value', name: 'Count' },
+        series: [{ type: 'bar', data: alertsBySeverityData.values, itemStyle: { color: '#73C0DE' } }]
+    });
+
+    // Alerts by Instance Chart
+    const alertsByInstanceData = formatChartData(alertStats.alerts_by_instance, 'instance', 'instance_count');
+    const alertsByInstanceChart = echarts.init(document.getElementById('alertsByInstanceChart'));
+    alertsByInstanceChart.setOption({
+        title: { text: 'Alerts by Instance', left: 'center' },
+        tooltip: { trigger: 'axis' },
+        xAxis: { type: 'category', data: alertsByInstanceData.labels },
+        yAxis: { type: 'value', name: 'Count' },
+        series: [{ type: 'bar', data: alertsByInstanceData.values, itemStyle: { color: '#FAC858' } }]
+    });
+</script>
+</body>
+</html>

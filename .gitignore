@@ -1,0 +1,10 @@
+/.idea
+/builds
+/alert-forge
+/coverage.*
+
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*

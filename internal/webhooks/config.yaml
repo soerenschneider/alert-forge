@@ -1,0 +1,11 @@
+---
+package: webhooks
+generate:
+  std-http-server: true
+  client: false
+  models: true
+  embedded-spec: true
+  strict-server: false
+output: api.gen.go
+output-options:
+  skip-prune: true

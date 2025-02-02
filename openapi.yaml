@@ -1,0 +1,625 @@
+---
+openapi: 3.0.3
+info:
+  title: alert-forge API
+  description: API specification for alert-forge.
+  version: 1.0.0
+  contact:
+    name: soeren schneider
+    url: https://github.com/soerenschneider/alert-forge
+    email: "56670304+soerenschneider@users.noreply.github.com" # this is just for linting reasons
+  license:
+    name: "NONE" # this is just for linting reasons
+    url: "none" # this is just for linting reasons
+
+servers:
+  - url: http://localhost:8888
+    description: Local server
+tags:
+  - name: alerts
+  - name: statistics
+  - name: webhook
+paths:
+  /alerts:
+    description: "Get all alerts"
+    get:
+      summary: Get all alerts
+      description: Returns all alerts as JSON or HTML.
+      tags:
+        - alerts
+      operationId: getAllAlerts
+      parameters:
+        - name: Content-Type
+          in: header
+          description: Content type of the request (e.g., application/json or text/html)
+          required: false
+          schema:
+            type: string
+            enum:
+              - application/json
+              - text/html
+            default: text/html
+          example: text/html
+      responses:
+        '200':
+          description: A list of alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alert'
+              example:
+                - annotations:
+                    summary: "Disk space low"
+                    description: "The disk space is 90% full."
+                  endsAt: "2025-01-23T15:00:00Z"
+                  fingerprint: "123abc456"
+                  receivers:
+                    - name: "EmailReceiver"
+                  startsAt: "2025-01-23T10:00:00Z"
+                  status:
+                    inhibitedBy:
+                      - "MaintenanceMode"
+                    silencedBy:
+                      - "OpsTeam"
+                    state: "active"
+                  updatedAt: "2025-01-23T12:00:00Z"
+                  generatorURL: "http://example.com/generator"
+                  labels:
+                    severity: "critical"
+                    environment: "production"
+            text/html:
+              schema:
+                type: string
+              example: "<html><body><h1>Alerts</h1><p>List of active alerts.</p></body></html>"
+        '400':
+          description: Bad Request (e.g., invalid headers or parameters)
+        '500':
+          description: Internal Server Error
+
+  /alerts/today:
+    get:
+      summary: Get alerts for today
+      description: Returns all of today's alerts as JSON or HTML.
+      tags:
+        - alerts
+      operationId: getAlertsToday
+      parameters:
+        - name: Content-Type
+          in: header
+          description: Content type of the request (e.g., application/json or text/html)
+          required: false
+          schema:
+            type: string
+            enum:
+              - application/json
+              - text/html
+            default: text/html
+          example: text/html
+      responses:
+        '200':
+          description: Alerts for today
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alert'
+              example:
+                - annotations:
+                    summary: "Memory usage high"
+                    description: "Memory usage exceeded 85%."
+                  endsAt: "2025-01-22T20:00:00Z"
+                  fingerprint: "789xyz123"
+                  receivers:
+                    - name: "SlackReceiver"
+                  startsAt: "2025-01-22T10:00:00Z"
+                  status:
+                    inhibitedBy:
+                      - "ScheduledMaintenance"
+                    silencedBy:
+                      - "DevOpsTeam"
+                    state: "resolved"
+                  updatedAt: "2025-01-22T14:00:00Z"
+                  generatorURL: "http://example.com/generator"
+                  labels:
+                    severity: "warning"
+                    environment: "staging"
+            text/html:
+              schema:
+                type: string
+              example: "<html><body><h1>Today's Alerts</h1><p>List of today's active alerts.</p></body></html>"
+        '400':
+          description: Bad Request (e.g., invalid headers or parameters)
+        '500':
+          description: Internal Server Error
+
+  /alerts/yesterday:
+    get:
+      summary: Get alerts for yesterday
+      description: Returns all of yesterday's alerts as JSON or HTML.
+      tags:
+        - alerts
+      operationId: getAlertsYesterday
+      parameters:
+        - name: Content-Type
+          in: header
+          description: Content type of the request (e.g., application/json or text/html)
+          required: false
+          schema:
+            type: string
+            enum:
+              - application/json
+              - text/html
+            default: text/html
+          example: text/html
+      responses:
+        '200':
+          description: Alerts for yesterday
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alert'
+              example:
+                - annotations:
+                    summary: "CPU overload"
+                    description: "CPU usage above 95%."
+                  endsAt: "2025-01-21T18:00:00Z"
+                  fingerprint: "456def789"
+                  receivers:
+                    - name: "PagerDutyReceiver"
+                  startsAt: "2025-01-21T08:00:00Z"
+                  status:
+                    inhibitedBy:
+                      - "MaintenanceMode"
+                    silencedBy:
+                      - "OpsTeam"
+                    state: "active"
+                  updatedAt: "2025-01-21T12:00:00Z"
+                  generatorURL: "http://example.com/generator"
+                  labels:
+                    severity: "critical"
+                    environment: "production"
+            text/html:
+              schema:
+                type: string
+              example: "<html><body><h1>Yesterday's Alerts</h1><p>List of yesterday's alerts.</p></body></html>"
+        '400':
+          description: Bad Request (e.g., invalid headers or parameters)
+        '500':
+          description: Internal Server Error
+
+  /alerts/severity/{severity}:
+    get:
+      summary: Get alerts filtered by severity
+      description: Returns alert of a certain severity as JSON or HTML.
+      tags:
+        - alerts
+      operationId: getAlertsBySeverity
+      parameters:
+        - name: severity
+          in: path
+          description: The severity of the alerts (e.g., critical, warning)
+          required: true
+          schema:
+            type: string
+            example: critical
+        - name: Content-Type
+          in: header
+          description: Content type of the request (e.g., application/json or text/html)
+          required: false
+          schema:
+            type: string
+            enum:
+              - application/json
+              - text/html
+            default: text/html
+          example: text/html
+      responses:
+        '200':
+          description: Alerts filtered by severity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alert'
+              example:
+                - annotations:
+                    summary: "Database crash"
+                    description: "The database is down due to heavy load."
+                  endsAt: "2025-01-20T14:00:00Z"
+                  fingerprint: "321ghi654"
+                  receivers:
+                    - name: "SMSReceiver"
+                  startsAt: "2025-01-20T09:00:00Z"
+                  status:
+                    inhibitedBy:
+                      - "SystemUpgrade"
+                    silencedBy:
+                      - "AdminTeam"
+                    state: "critical"
+                  updatedAt: "2025-01-20T12:00:00Z"
+                  generatorURL: "http://example.com/generator"
+                  labels:
+                    severity: "critical"
+                    environment: "production"
+            text/html:
+              schema:
+                type: string
+              example: "<html><body><h1>Critical Alerts</h1><p>List of critical alerts filtered by severity.</p></body></html>"
+        '400':
+          description: Bad Request (e.g., invalid severity)
+        '500':
+          description: Internal Server Error
+
+  /alerts/instances/{instance}:
+    get:
+      summary: Get alerts for a specific instance
+      description: Returns alert of a certain instance as JSON or HTML.
+      tags:
+        - alerts
+      operationId: getAlertsByInstance
+      parameters:
+        - name: instance
+          in: path
+          description: The instance of the alerts (e.g., server1)
+          required: true
+          schema:
+            type: string
+            example: server1
+        - name: Content-Type
+          in: header
+          description: Content type of the request (e.g., application/json or text/html)
+          required: false
+          schema:
+            type: string
+            enum:
+              - application/json
+              - text/html
+            default: text/html
+          example: text/html
+      responses:
+        '200':
+          description: Alerts for a specific instance
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alert'
+              example:
+                - annotations:
+                    summary: "Disk full"
+                    description: "Disk usage reached 100%."
+                  endsAt: "2025-01-19T16:00:00Z"
+                  fingerprint: "654pqr321"
+                  receivers:
+                    - name: "EmailReceiver"
+                  startsAt: "2025-01-19T11:00:00Z"
+                  status:
+                    inhibitedBy:
+                      - "Maintenance"
+                    silencedBy:
+                      - "TechOpsTeam"
+                    state: "active"
+                  updatedAt: "2025-01-19T14:00:00Z"
+                  generatorURL: "http://example.com/generator"
+                  labels:
+                    severity: "warning"
+                    environment: "test"
+            text/html:
+              schema:
+                type: string
+              example: "<html><body><h1>Server Alerts</h1><p>List of alerts for the specific instance.</p></body></html>"
+        '400':
+          description: Bad Request (e.g., invalid instance)
+        '500':
+          description: Internal Server Error
+
+  /statistics:
+    get:
+      summary: Retrieve alert statistics
+      tags:
+        - statistics
+      operationId: statistics
+      description: Returns alert statistics as JSON or HTML. The JSON conforms to the `AlertStats` type.
+      parameters:
+        - name: Accept
+          in: header
+          description: Specify `application/json` or `text/html` to request JSON or HTML format.
+          required: false
+          schema:
+            type: string
+            enum: [application/json, text/html]
+      responses:
+        '200':
+          description: Successful response with alert statistics.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alert_duration:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          example: "CPU Usage"
+                        average_duration:
+                          type: integer
+                          example: 3600
+                  alerts_by_day:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        alert_date:
+                          type: string
+                          format: date
+                          example: "2025-01-23"
+                        alert_count:
+                          type: integer
+                          example: 5
+                  avg_alert_duration_by_severity:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        severity:
+                          type: string
+                          example: "critical"
+                        average_duration:
+                          type: integer
+                          example: 4200
+                  alerts_by_severity:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        severity:
+                          type: string
+                          example: "warning"
+                        alert_count:
+                          type: integer
+                          example: 12
+                  alerts_by_instance:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        instance:
+                          type: string
+                          example: "instance-1"
+                        instance_count:
+                          type: integer
+                          example: 7
+            text/html:
+              schema:
+                type: string
+                example: "<html><body><h1>Alert Statistics</h1><p>HTML representation of alert statistics...</p></body></html>"
+        '400':
+          description: Invalid request (e.g., unsupported `Accept` header value).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unsupported Accept header. Use application/json or text/html."
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "An unexpected error occurred."
+
+  /webhook:
+    post:
+      summary: Create a new alert
+      description: Accepts JSON-encoded alerts from Alertmanager
+      tags:
+        - webhook
+      operationId: createAlert
+      requestBody:
+        description: JSON payload representing the alert
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                receiver:
+                  type: string
+                  x-go-type-skip-optional-pointer: true
+                  example: "sms"
+                status:
+                  type: string
+                  x-go-type-skip-optional-pointer: true
+                  example: "firing"
+                alerts:
+                  type: array
+                  x-go-type-skip-optional-pointer: true
+                  items:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        x-go-type-skip-optional-pointer: true
+                        example: "firing"
+                      labels:
+                        type: object
+                        x-go-type-skip-optional-pointer: true
+                        additionalProperties:
+                          type: string
+                        example:
+                          alertname: "ProbeFailure"
+                          instance: "https://server.example.org"
+                          job: "http_checks"
+                          monitor: "master"
+                          severity: "critical"
+                      annotations:
+                        type: object
+                        x-go-type-skip-optional-pointer: true
+                        additionalProperties:
+                          type: string
+                        example:
+                          description: "Instance https://server.example.org has been down for over 5m."
+                          summary: "BlackBox Probe Failure"
+                      startsAt:
+                        type: string
+                        x-go-type-skip-optional-pointer: true
+                        format: date-time
+                        example: "2023-02-06T13:08:45.828Z"
+                      endsAt:
+                        type: string
+                        x-go-type-skip-optional-pointer: true
+                        format: date-time
+                        example: "0001-01-01T00:00:00Z"
+                      generatorURL:
+                        type: string
+                        x-go-type-skip-optional-pointer: true
+                        example: "http://prometheus.example.org:9090/graph?expr=probe_success"
+                      fingerprint:
+                        type: string
+                        x-go-type-skip-optional-pointer: true
+                        example: "1a30ba71cca2921f"
+                groupLabels:
+                  type: object
+                  x-go-type-skip-optional-pointer: true
+                  additionalProperties:
+                    type: string
+                  example:
+                    alertname: "ProbeFailure"
+                commonLabels:
+                  type: object
+                  x-go-type-skip-optional-pointer: true
+                  additionalProperties:
+                    type: string
+                  example:
+                    alertname: "ProbeFailure"
+                    instance: "https://server.example.org"
+                    job: "http_checks"
+                    monitor: "master"
+                    severity: "critical"
+                commonAnnotations:
+                  type: object
+                  x-go-type-skip-optional-pointer: true
+                  additionalProperties:
+                    type: string
+                  example:
+                    description: "Instance https://server.example.org has been down for over 5m."
+                    summary: "BlackBox Probe Failure"
+                externalURL:
+                  type: string
+                  x-go-type-skip-optional-pointer: true
+                  example: "http://prometheus.example.org:9093"
+                version:
+                  type: string
+                  x-go-type-skip-optional-pointer: true
+                  example: "4"
+                groupKey:
+                  type: string
+                  x-go-type-skip-optional-pointer: true
+                  example: "{}/{severity=\"critical\"}:{alertname=\"ProbeFailure\"}"
+                truncatedAlerts:
+                  type: integer
+                  x-go-type-skip-optional-pointer: true
+                  example: 0
+      responses:
+        '201':
+          description: Alert created successfully
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+
+components:
+  schemas:
+    Status:
+      type: object
+      x-go-type-skip-optional-pointer: true
+      properties:
+        inhibitedBy:
+          type: array
+          x-go-type-skip-optional-pointer: true
+          items:
+            type: string
+          example:
+            - "ScheduledMaintenance"
+        silencedBy:
+          type: array
+          x-go-type-skip-optional-pointer: true
+          items:
+            type: string
+          example:
+            - "OpsTeam"
+        state:
+          type: string
+          x-go-type-skip-optional-pointer: true
+          example: "critical"
+    Alert:
+      type: object
+      x-go-type-skip-optional-pointer: true
+      properties:
+        annotations:
+          type: object
+          x-go-type-skip-optional-pointer: true
+          additionalProperties:
+            type: string
+          example:
+            summary: "High CPU usage"
+            description: "CPU usage exceeds 90%."
+        endsAt:
+          type: string
+          x-go-type-skip-optional-pointer: true
+          format: date-time
+          example: "2025-01-23T15:00:00Z"
+        fingerprint:
+          type: string
+          x-go-type-skip-optional-pointer: true
+          example: "123abc456"
+        receivers:
+          type: array
+          x-go-type-skip-optional-pointer: true
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                x-go-type-skip-optional-pointer: true
+                example: "EmailReceiver"
+        startsAt:
+          type: string
+          x-go-type-skip-optional-pointer: true
+          format: date-time
+          example: "2025-01-23T10:00:00Z"
+        status:
+          $ref: '#/components/schemas/Status'
+        updatedAt:
+          type: string
+          x-go-type-skip-optional-pointer: true
+          format: date-time
+          example: "2025-01-23T12:00:00Z"
+        generatorURL:
+          type: string
+          x-go-type-skip-optional-pointer: true
+          example: "http://example.com/generator"
+        labels:
+          type: object
+          x-go-type-skip-optional-pointer: true
+          additionalProperties:
+            type: string
+          example:
+            severity: "critical"
+            environment: "production"

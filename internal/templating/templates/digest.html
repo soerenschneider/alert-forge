@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Active Alerts</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #4CAF50;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            color: #555;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .severity-summary {
+            margin-top: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .severity-summary span {
+            margin: 0 15px;
+            font-size: 16px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Active Alerts Report</h2>
+
+    <div class="severity-summary">
+        {{range .Severities}}
+        {{if gt .Total 0}}
+        <a href="#table-{{ .Severity }}">
+            <span>{{.Severity}}: {{.Total }} {{if or (gt .NewCount 0) (gt .GoneCount 0)}}({{if gt .NewCount 0}}{{.NewCount}} new {{end}}{{if gt .GoneCount 0}}{{.GoneCount}} gone{{end}}){{end}}</span>
+        </a>
+        {{ end }}
+        {{end}}
+    </div>
+
+    <h3>Firing</h3>
+    <table id="table-firing">
+        <thead>
+        <tr>
+            <th>Alert Name</th>
+            <th>Severity</th>
+            <th>Labels</th>
+            <th>Annotations</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{range .FiringAlerts}}
+        <tr class="{{if isZeroTime .EndsAt }}firing{{ else }}resolved{{ end }}" style="background-color: {{ mapSeverity .Labels.severity }};">
+            <td><strong>{{.Labels.alertname}}</strong><br/>{{if isZeroTime .EndsAt }}{{.StartsAt.Format "02.01. 15:04"}}{{ else }}{{.StartsAt.Format "02.01. 15:04"}} – {{.EndsAt.Format "02.01. 15:04"}}{{ end }}</td>
+            <td>{{ .Labels.severity }}</td>
+            <td>
+                <ul>
+                    <li><strong>instance</strong>: {{ index .Labels "instance" }}</li>
+                </ul>
+                <details>
+                    <summary>More details</summary>
+                    <ul>
+                        {{range $key, $value := .Labels}}
+                        {{if not (or (eq $key "severity") (eq $key "alertname") (eq $key "instance")) }}
+                        <li><strong>{{$key}}:</strong> {{$value}}</li>
+                        {{end}}
+                        {{end}}
+                    </ul>
+                </details>
+            </td>
+            <td>
+                <details>
+                    <summary>Details</summary>
+                    <ul>
+                        {{range $key, $value := .Annotations}}
+                        {{if not (or (eq $key "severity") (eq $key "alertname")) }}
+                        <li><strong>{{$key}}:</strong> {{$value}}</li>
+                        {{end}}
+                        {{end}}
+                    </ul>
+                </details>
+            </td>
+        </tr>
+        {{end}}
+        </tbody>
+    </table>
+
+    <h3>Resolved today</h3>
+    <table id="table-resolved">
+        <thead>
+        <tr>
+            <th>Alert Name</th>
+            <th>Severity</th>
+            <th>Labels</th>
+            <th>Annotations</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        {{range .ResolvedAlerts}}
+        <tr class="{{if isZeroTime .EndsAt }}firing{{ else }}resolved{{ end }}" style="background-color: {{ mapSeverity .Labels.severity }};">
+            <td><strong>{{.Labels.alertname}}</strong><br/>{{if isZeroTime .EndsAt }}{{.StartsAt.Format "02.01. 15:04"}}{{ else }}{{.StartsAt.Format "02.01. 15:04"}} – {{.EndsAt.Format "02.01. 15:04"}}{{ end }}</td>
+            <td>{{ .Labels.severity }}</td>
+            <td>
+                <ul>
+                    <li><strong>instance</strong>: {{ index .Labels "instance" }}</li>
+                </ul>
+                <details>
+                    <summary>More details</summary>
+                    <ul>
+                        {{range $key, $value := .Labels}}
+                        {{if not (or (eq $key "severity") (eq $key "alertname") (eq $key "instance")) }}
+                        <li><strong>{{$key}}:</strong> {{$value}}</li>
+                        {{end}}
+                        {{end}}
+                    </ul>
+                </details>
+            </td>
+            <td>
+                <details>
+                    <summary>Details</summary>
+                    <ul>
+                        {{range $key, $value := .Annotations}}
+                        {{if not (or (eq $key "severity") (eq $key "alertname")) }}
+                        <li><strong>{{$key}}:</strong> {{$value}}</li>
+                        {{end}}
+                        {{end}}
+                    </ul>
+                </details>
+            </td>
+        </tr>
+        {{end}}
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
