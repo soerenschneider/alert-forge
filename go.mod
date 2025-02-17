@@ -6,7 +6,7 @@ require (
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/getkin/kin-openapi v0.129.0
 	github.com/go-co-op/gocron/v2 v2.15.0
-	github.com/go-playground/validator/v10 v10.24.0
+	github.com/go-playground/validator/v10 v10.25.0
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/mattn/go-sqlite3 v1.14.24
 	github.com/oapi-codegen/oapi-codegen/v2 v2.4.1
