@@ -10,7 +10,7 @@ COPY ./ ./
 RUN CGO_ENABLED=${CGO_ENABLED} go build -ldflags="-w" -o /alert-forge ./cmd
 
 
-FROM debian:12.9-slim AS final
+FROM debian:12.10-slim AS final
 
 RUN apt update && apt -y install ca-certificates sqlite3 && rm -rf /var/lib/apt/lists/*
 
