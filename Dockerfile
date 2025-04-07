@@ -1,4 +1,4 @@
-FROM golang:1.23.5 AS build
+FROM golang:1.24.2 AS build
 
 ARG CGO_ENABLED=1
 
